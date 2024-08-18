@@ -16,6 +16,14 @@ abstract sig GeneroLiterario {}
 
 one sig Epico, Lirico, Dramatico extends GeneroLiterario {}
 
+fact "no hay generos literarios que no tengan libros representativos" {
+	no g: GeneroLiterario | no genero.g 
+}
+
+fact "no hay autores que no hayan escrito ningún libro" {
+	all a: Autor | some escritoPor.a
+}
+
 // no es posible que haya novelistas y poetas que escriban libros en común.
 
 fact "novelistas y poetas no son autores de los mismos libros" {
@@ -115,7 +123,7 @@ fun autores_periodistas [l: Libro]: set Periodista {
 // directamente le "pasamos" como argumento el tipo de autor que queremos a la función.
 // esta función es más expresiva.
 // Notese que autores_clase[l, Autor] es equivalente a autores[l] ya que ambas devuelven
-// el conjunto de autores de l.
+// el conjunto de autores de l. Lo probamos con la aserción más adelante.
 fun autores_clase [l: Libro, clase: set Autor]: set Autor {
 	autores[l] & clase
 }
