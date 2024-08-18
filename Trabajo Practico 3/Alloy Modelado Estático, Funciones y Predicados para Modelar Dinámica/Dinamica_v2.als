@@ -15,6 +15,9 @@ abstract sig GeneroLiterario {}
 
 one sig Epico, Lirico, Dramatico extends GeneroLiterario {}
 
+--------------------------------------------------------
+
+/*
 fact "no hay generos literarios que no tengan libros representativos" {
 	no g: GeneroLiterario | no genero.g 
 }
@@ -27,8 +30,6 @@ fact "novelistas y poetas no son autores de los mismos libros" {
 	escritoPor.Novelista & escritoPor.Poeta = none
 }
 
-
-/*
 fact "novelistas y poetas no son autores de los mismos libros" {
 	all l: Libro | 
 		no a1, a2: Autor |
@@ -65,6 +66,8 @@ fact "novelistas y poetas no son autores de los mismos libros" {
 }
 */
 
+--------------------------------------------------------
+
 fun autores [l: Libro]: set Autor {
 	l.escritoPor
 }
@@ -83,6 +86,11 @@ fun autores_periodistas [l: Libro]: set Periodista {
 
 fun autores_clase [l: Libro, clase: set Autor]: set Autor {
 	autores[l] & clase
+}
+
+// función para obtener el conjunto de libros de una biblioteca que pertenecen a un dado género.
+fun libros_biblioteca_genero [b: Biblioteca, g: GeneroLiterario]: set Libro {
+	{l: Libro | (l in b.coleccion) and (l.genero = g)}
 }
 
 assert autores_equivale_autores_clase {
@@ -159,9 +167,41 @@ run agregar_v2_no_se_agrega {
 
 ---- Modelado de comportamiento dinámico: ELIMINAR ----
 
-// predicado para eliminar un libro de la colección de una biblioteca.
-// se deben cumplir las siguientes condiciones:
-// 
-pred eliminar [] {
+// predicado para eliminar un libro de la colección de una biblioteca. Tiene éxito cuando se eliminó
+// efectivamente el libro.
+// se deben cumplir las siguientes restricciones:
+//	- el libro a eliminar no puede ser de género Épico;
+//	- el libro a eliminar debe poseer autores;
+//	- luego de eliminar el libro, la biblioteca no puede tener menos de tres libros del género
+//	al cual pertenece el libro eliminado.
+pred eliminar [l: Libro, bi, bf: Biblioteca] {
+	// precondiciones: el libro `l` tiene que estar en la biblioteca
+	(l in bi.coleccion) and
 
+	// restricciones adicionales
+	(l.genero != Epico) and
+	(some autores[l]) and
+
+	// postcondiciones:
+	// el libro `l` no debe estar en la biblioteca
+	(bf.coleccion = bi.coleccion - l) and
+	// la biblioteca no puede tener menos de tres libros del género al cual pertenece el libro eliminado
+	(#libros_biblioteca_genero[bf, l.genero] >= 3)
 }
+
+// el scope por defecto no alcanza ya que nunca se podría cumplir la última postcondición.
+run eliminar_caso_exito {
+	some l: Libro, bi, bf: Biblioteca | eliminar[l, bi, bf]
+} for 5
+
+run eliminar_caso_no_exito {
+	some l: Libro, disj bi, bf: Biblioteca | (#Biblioteca = 2) and (l in bi.coleccion) and not eliminar[l, bi, bf]
+} for 5
+
+// basicamente busco tener dos casos en una instancia.
+run eliminar_caso_no_exito_v2 {
+	// existe algún libro y alguna biblioteca de la cual es posible eliminar
+	(some l1: Libro, bi1, bf1: Biblioteca | eliminar[l1, bi1, bf1]) and
+	// y existe algún otro libro y otra biblioteca de las cual no es posible eliminar.
+	(some l2: Libro, bi2, bf2: Biblioteca | not eliminar[l2, bi2, bf2])
+} for 4
