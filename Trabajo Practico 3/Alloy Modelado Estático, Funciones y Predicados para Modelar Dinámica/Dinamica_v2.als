@@ -37,6 +37,7 @@ fact "novelistas y poetas no son autores de los mismos libros" {
 			(a2 in Poeta) and
 			(a1 in l.escritoPor) and
 			(a2 in l.escritoPor)
+// o bien (a1+a2) in l.escritoPor
 }
 
 // alternativa 2
@@ -47,6 +48,7 @@ fact "novelistas y poetas no son autores de los mismos libros" {
 			(a2 in Poeta) and
 			(a1 in autores[l]) and
 			(a2 in autores[l])
+// o bien (a1+a2) in autores[l]
 }
 
 // alternativa 3
