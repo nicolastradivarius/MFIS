@@ -17,7 +17,10 @@ one sig Epico, Lirico, Dramatico extends GeneroLiterario {}
 
 --------------------------------------------------------
 
-/*
+fact "no hay libros que no estén en alguna biblioteca" {
+	no l: Libro | no coleccion.l
+}
+
 fact "no hay generos literarios que no tengan libros representativos" {
 	no g: GeneroLiterario | no genero.g 
 }
@@ -29,7 +32,7 @@ fact "no hay autores que no hayan escrito ningún libro" {
 fact "novelistas y poetas no son autores de los mismos libros" {
 	escritoPor.Novelista & escritoPor.Poeta = none
 }
-
+/*
 fact "novelistas y poetas no son autores de los mismos libros" {
 	all l: Libro | 
 		no a1, a2: Autor |
@@ -194,7 +197,7 @@ pred eliminar [l: Libro, bi, bf: Biblioteca] {
 // el scope por defecto no alcanza ya que nunca se podría cumplir la última postcondición.
 run eliminar_caso_exito {
 	some l: Libro, bi, bf: Biblioteca | eliminar[l, bi, bf]
-} for 5
+} for 6
 
 run eliminar_caso_no_exito {
 	some l: Libro, disj bi, bf: Biblioteca | (#Biblioteca = 2) and (l in bi.coleccion) and not eliminar[l, bi, bf]
@@ -206,4 +209,4 @@ run eliminar_caso_no_exito_v2 {
 	(some l1: Libro, bi1, bf1: Biblioteca | eliminar[l1, bi1, bf1]) and
 	// y existe algún otro libro y otra biblioteca de las cual no es posible eliminar.
 	(some l2: Libro, bi2, bf2: Biblioteca | not eliminar[l2, bi2, bf2])
-} for 4
+} for 6
