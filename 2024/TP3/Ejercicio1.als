@@ -409,7 +409,10 @@ run suplenteATitularCasoNoExito {
 
 // el colegio tiene solo 1 suplente y ése es la persona que se quiere cambiar.
 run suplenteATitularCasoNoExito1 {
-	
-}
+	some c1, c2: Colegio, p: Persona | one (c1.suplentes) and suplenteATitular[c1, c2, p]
+} for 9
 
 // la persona no es siquiera miembro del colegio
+run suplenteATitularCasoNoExito2 {
+	some c1, c2: Colegio, p: Persona | (p not in c1.miembros) and suplenteATitular[c1, c2, p]
+} for 8
