@@ -1,9 +1,15 @@
 open util/ordering[State] as ord
 
-sig Semaforo{ situacion:  set State}
+sig Semaforo {
+	situacion:  set State
+}
+
 // me concentro en un solo semáforo.
 // si quisiera más semáforos: 
-sig State { situacion: Semaforo -> one Color }
+sig State {
+	situacion: Semaforo -> one Color
+}
+
 //sig State { luz: one Color}
 abstract sig Color {}
 one sig Rojo, Amarillo, Verde extends Color {}
@@ -13,7 +19,7 @@ fun secuenciaColor: Color -> Color {
      (Color <: iden) + (Rojo-> Verde) + (Verde-> Amarillo) + (Amarillo -> Rojo)
  }
 
--- el semaforo soli puede cambiar su luz
+-- el semaforo solo puede cambiar su luz
 pred cambioLuz(s,s1: State, sem: Semaforo) {
 	sem.(s.situacion) -> sem.(s1.situacion) in secuenciaColor
 }

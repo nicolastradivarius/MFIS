@@ -116,12 +116,13 @@ pred poseeMenorCantCambios[b: Bicicleta] {
 // determina si el rodado de b1 es igual o más chico que el de b2
 pred noSuperaRodado[b1, b2: Bicicleta] {
 	((b1.rod in Chico) and (some b2.rod)) or
-	((b1.rod in Mediano) and (b2.rod in Mediano+Grande))
+	((b1.rod in Mediano) and (b2.rod in Mediano+Grande)) or
+	((b1.rod in Grande) and (b2.rod in Grande))
 }
 
 // determina si la cantidad de cambios que tiene b1 es menor o igual que la de b2
 pred noSuperaCambios[b1, b2: Bicicleta] {
-	#(b1.mod) <= #(b2.mod)
+
 }
 
 -------------------- Instancias --------------------
