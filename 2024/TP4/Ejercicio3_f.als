@@ -19,7 +19,7 @@ sig Estado {
 	puente: one Puente,
 	barcosEnEspera: set Barco,
 	autosEnEspera: set Auto,
-	autosEnPuente: lone Auto
+	autosEnPuente: set Auto
 }
 
 fact "en toda instancia hay al menos dos autos y dos barcos" {
@@ -231,15 +231,6 @@ run $2 {
 		transicion6[e3, e4] and transicion3[e4, e4.next]
 } for 9
 
-
-
-// Si hay un auto en el puente, puede mantenerse sobre el puente en forma indeterminada.
-// Si el estado elegido es el primero, el analizador no encuentra instancias para este caso, 
-// y es intencional, porque si un auto está en el puente, las únicas transiciones posibles son que
-// lleguen barcos, lleguen autos, o el auto cruce el puente.
-// Si el estado es cualquiera menos el último, el analizador encuentra instancias ya que
-// es posible que en esas instancias, lo único que suceda es que lleguen barcos o autos mientras
-// el auto se mantiene en el puente hasta el último estado.
 run autoPermaneceEnPuente {
 	some e1: Estado | 
 --		e1 = ord/first and
@@ -247,13 +238,45 @@ run autoPermaneceEnPuente {
 --		(e1 != ord/last) and
 		(some e1.autosEnPuente) and
 		(all e1sigs: e1.nexts | (some e1sigs.autosEnPuente & e1.autosEnPuente))
-} for 5
+} for 15
 
-// El puente siempre estará `bajo` en el estado inmediatamente siguiente de aquel 
-// en el cual hay algún auto sobre el puente.
-// El analizador no encuentra contraejemplos.
 check puenteSiempreBaja {
 	all e1: Estado-ord/last | let e2 = e1.next | 
 		(some e1.autosEnPuente) implies (e2.puente = Bajo)
 } for 15
+
+/**
+Si se garantiza la prioridad del descenso de un auto por sobre el resto 
+de las operaciones que provocan un cambio de estado (*), 
+¿se mantiene la respuesta sobre el cumplimiento o no de la propiedad 
+enunciada en el segundo ítem del inciso anterior?
+(Se refiere a: En todos los estados, si hay un auto en el puente, entonces 
+en el próximo estado ya no lo está.)
+
+(*) Si hay un auto en el puente, la única operación que puede realizarse 
+es la de descenso de un auto; en caso contrario, puede realizarse cualquiera de las otras.
+
+Respuesta: sí, se mantiene. Esto es porque si la única operación posible es la del descenso
+de un auto, entonces siempre va a suceder que en el estado inmediatamente siguiente, el auto no esté.
+*/
+
+
+/**
+¿Qué ocurre con dicha propiedad si se modifica el modelo para permitir que haya 
+más de un auto sobre el puente en forma simultánea? Considere el escenario con y 
+sin prioridad de la operación de descenso por sobre el resto de las operaciones.
+
+Respuesta: En un escenario con la prioridad mencionada, por más que muchos autos puedan
+estar en el puente, si un auto sube al puente en un estado, al ser una operación prioritaria, 
+abandonará el puente en el próximo estado; de esta forma, el puente nunca tendrá más de un auto encima.
+En cambio, si la operación no es prioritaria, puede ocurrir que sigan subiendo autos al puente 
+mientras los que ya estaban permanecen, o que el auto que baje del puente sea distinto al que subió en
+el estado inmediatamente anterior.
+*/
+
+run subenDosAutosAlPuente {
+	some e1, e3: Estado - ord/last | let e2 = e1.next | let e4 = e3.next |
+		transicion3[e1, e2] and transicion3[e2, e3]
+} for 6
+
 

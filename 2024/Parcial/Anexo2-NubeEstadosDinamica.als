@@ -1,3 +1,31 @@
+/**
+Los repositorios en la nube traen aparejados algunos problemas de sincronización sobre la información almacenada en ellos.
+Considere el repositorio “ProximaNube”. El repositorio lleva un registro de los pedidos de actualización que vayan
+llegando.
+
+Considere ahora el modelo dado en el anexo 2, pensado para modelar la dinámica del escenario planteado a través 
+de la noción de estado. En este caso, asuma que el repositorio tiene como política de sincronización permitirle
+el acceso a la última solicitud de actualización, a menos que solo haya una única solicitud de actualización 
+pendiente o haya alguna solicitud identificada como prioritaria. Tenga en cuenta que las únicas acciones posibles 
+para establecer cambios de estado son las siguientes:
+
+**Llegada de una solicitud de actualización:** Al llegar una solicitud de actualización, la misma debe registrarse
+en la relación `ultimaActualizacion`. En caso de que haya una solicitud previa en dicha relación, la solicitud 
+previa debe moverse a `actualizacionesPendientes`.
+
+**Aplicación de la última solicitud de actualización:** Es posible realizar la operación `AplicarUltimaActualizacion` 
+si la solicitud almacenada en la relación `ultimaActualizacion` es prioritaria, o bien si no lo es pero no hay 
+actualizaciones prioritarias pendientes. En caso de que la actualización aplicada sea prioritaria, se eliminan 
+todas las actualizaciones pendientes. En caso de que la actualización aplicada no sea prioritaria, se coloca como 
+`ultimaActualizacion` alguna de las actualizaciones que estaban pendientes.
+
+**Aplicación de una solicitud de actualización prioritaria:** La operación `AplicarActualizacionPrioritaria` 
+efectúa una actualización prioritaria que se encuentre pendiente. Al aplicarla, se deben eliminar todas las 
+actualizaciones que estaban pendientes al momento de registrar en la relación `ultimaActualizacion` la actualización 
+aplicada.
+
+*/
+
 /* Sincronizacion de archivos en la nube
 
 Modelo para un solo archivo */
