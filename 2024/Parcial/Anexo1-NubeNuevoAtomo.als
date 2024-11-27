@@ -13,7 +13,7 @@ fact {all a: Archivo | #(a.pendientes & Prioritaria) < 3}
 -- Aplicar Actualización: el predicado debe satifacerse en caso que haya una actualizacion pendiente.
 -- si hay alguna prioritaria debe aplicarse esta.
 -- en caso de no haber prioritarias aplica alguna de las anteriores.
-pred AplicarActualizacion[a1,a2: Archivo]{
+pred AplicarActualizacion[a1, a2: Archivo]{
 	-- precondición
 	#a1.pendientes > 1 and
 	-- poscondición
