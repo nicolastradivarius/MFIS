@@ -1,38 +1,36 @@
 // Quiero realizar dinámica basada en relaciones para los marcadores de un unico libro.
-open util/ordering[Tiempo] as ord
+open util/ordering[Estado] as ord
 
 one sig Libro {
 	paginas: some Pagina,
-	// el libro tiene un conjunto de marcadores que cambia con el tiempo.
-	// podrá tener cero, uno o más marcadores en un determinado timestamp.
-	marcadores: set Marcador -> Tiempo
 }
 
-sig Marcador {
-	// cambiamos a lone para permitir que un marcador no marque una página, y luego
-	// sí la marque en un dado timestamp
-	pag: lone Pagina
+sig Marcador {}
+
+sig Pagina {}
+
+sig Estado {
+	// como tenemos un unico libro, podemos prescindir de él en la relación.
+	// si tuviéramos varios libros, hay que hacer "marcadores: Libro -> set Marcador" como en el caso de los semáforos.
+	marcadores: Marcador -> one Pagina
 }
 
-sig Pagina { }
-
-sig Tiempo {}
 
 // el libro puede tener entre cero y tres marcadores.
-fact {all l: Libro | #l.marcadores >= 0}
-
-fact {all l: Libro | #l.marcadores <= 3}
-
+fact estado_valido {
+	all e: Estado | #(e.marcadores).Pagina >= 0 and #(e.marcadores).Pagina <= 3
+}
+/*
 // el marcador no puede marcar una página que no esté en el conjunto de páginas del libro.
-fact {no m: Marcador, l: Libro, t: Tiempo | (m in (l.marcadores).t) and ((m.pag) !in l.paginas) }
+// Es decir, no puede ocurrir al mismo tiempo que un marcador esté en el conjunto de marcadores del libro
+// y que la página que marque no esté en el libro.
+fact {no m: Marcador, e: Estado | (m in (e.marcadores)) and ((m.marca) !in Libro.paginas) }
 
-// da problemas
-// un marcador que no esté en un libro en un determinado timestamp no puede marcar una página
-fact {all m: Marcador, t: Tiempo, l: Libro | m not in (l.marcadores).t implies no m.pag}
+// un marcador que no esté en un libro en un determinado estado no puede marcar una página.
+fact {all m: Marcador, e: Estado | m not in (e.marcadores) implies no m.marca}
 
 fact {all p: Pagina | some l:Libro | p in l.paginas} -- no hay paginas sueltas
-
-run default {}
+*/
 
 ---------------------------------------
 
@@ -42,43 +40,45 @@ Los cambios de estado tendrán lugar por el agregado de un marcador,
 la eliminación de un marcador y la modificación de la página marcada por un marcador del libro.
 */
 
-// en el timestamp inicial, el libro no tiene marcadores
-pred init [t: Tiempo, l: Libro] {
-	no (l.marcadores).t
+// en el estado inicial, el libro no tiene marcadores
+pred init [e: Estado] {
+	no (e.marcadores)
 }
 
-pred agregarMarcador [t1, t2: Tiempo, l: Libro, m: Marcador] {
-	some p: Pagina | 
-		(m not in (l.marcadores).t1) and
-		(p in l.paginas) and
-		(l.marcadores).t2 = (l.marcadores).t1 + m and
-		(m.pag = p)
+pred agregarMarcador [e1, e2: Estado] {
+/*	some m: Marcador, p: Libro.paginas | 
+		m !in e1.marcadores and
+		e2.marcadores = e1.marcadores + m */
 }
 
-pred eliminarMarcador [t1, t2: Tiempo, l: Libro, m: Marcador] {
-
-}
-
-pred modificarMarcador [t1, t2: Tiempo, l: Libro, m: Marcador] {
+pred eliminarMarcador [e1, e2: Estado] {
 
 }
 
-pred hacerNada [t1, t2: Tiempo, l: Libro] {
-	(l.marcadores).t1 = (l.marcadores).t2
+pred modificarMarcador [e1, e2: Estado] {
+
+}
+
+pred hacerNada [e1, e2: Estado] {
+	e1.marcadores = e2.marcadores
 }
 
 fact traces {
-	all l: Libro, t: Tiempo-ord/last | some m: Marcador |
-		init[ord/first, l] and (
-			agregarMarcador[t, t.next, l, m] or
-			hacerNada[t, t.next, l]
+	all e1: Estado - ord/last | let e2 = e1.next |
+		init[ord/first] and
+		(
+			agregarMarcador[e1, e2] or
+
+			hacerNada[e1, e2]
 		)
 }
 
-run default {some Marcador} for 5 Tiempo, exactly 3 Marcador, exactly 3 Pagina
+run default {some marcadores} for 9 
 
-run seAgregoMarcador {
-	some m: Marcador, t: Tiempo, l: Libro | agregarMarcador[t, t.next, l, m]
-} for 6 Tiempo, exactly 3 Marcador, exactly 3 Pagina
+run seAgregoMarcadorDosVeces {
+	some disj e1, e3: Estado-ord/last | let e2 = e1.next | let e4 = e3.next | 
+		agregarMarcador[e1, e2] and
+		agregarMarcador[e3, e4]
+}  for 9
 
 

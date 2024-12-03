@@ -1,7 +1,7 @@
 open util/ordering[State] as ord
 
 sig Semaforo {
-	situacion:  set State
+	situacion: set State
 }
 
 // me concentro en un solo semáforo.
