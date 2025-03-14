@@ -1,0 +1,7 @@
+Las especificaciones formales usan matemática y lógica para ayudar en la implementación y diseño de software, describir un sistema y verificar propiedades.
+
+El carácter de "formal" se lo da el hecho de tener una sintaxis definida, precisa y no ambigua.
+
+El core de un lenguaje de modelado se compone de una lógica que brinda los conceptos fundamentales para escribir las especificaciones, y el soporte algoritmico para verificar lo escrito. Debe ser pequeño, simple y expresivo.
+
+En el curso se combinan los cuantificadores de la lógica de primer orden con los operadores del cálculo relacional, que tiene una fuerte relación con la teoría de conjuntos.

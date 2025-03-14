@@ -1,0 +1,87 @@
+(1) 
+	(a) tamaño = 3, aridad = 1, dominio y rango ????
+	(b) tamaño = 4, aridad = 2, dominio = {G0, A0, A1}, rango = {A0, A1, D0, D1}
+	(c) tamaño = 5, aridad = 3, dominio = {A0, A3, A1}, rango = {C0, C1, D0}
+	(d) tamaño = 4, aridad = 3, dominio = {A1, A3, A0, A2}, rango = {C1, C0, D0}
+	(e) tamaño = 1, aridad = 3, dominio = {A3}, rango = {C1}
+
+(2) Para que una operación sea legal, debe ser aplicada sobre relaciones de la misma aridad.
+	(a)
+	Alias + Group = {A0, A1, G0}
+	Alias & Target = Alias
+	Name - Alias = {G0}
+	Target - Addr = {G0, D0, D1, D2} = Group + Addr
+	Target in Group = False
+	addressBook & Group -> no es legal
+	Alias in Name = True
+	Target = Group + Alias -> False
+
+	(b)
+	r2 - r1 = {(A1, B3, C1), (A2, B2, D0)}
+	r1 & r2 = r2 & r1 -> True (la intersección es conmutativa)
+	A + r1 -> no es legal
+	r3 in r2 -> True
+	A - B = A (A y B no tienen tuplas en común)
+
+(3) El dominio es A y el rango es B.
+	(a) r1:
+	¿funcional? no puede haber un mismo elemento del dominio mapeado a múltiples 
+	elementos del rango. En este caso, está A1 mapeado a B1 y B2 por lo que
+	no es funcional.
+	¿inyectiva? no puede haber un mismo elemento del rango mapeado a múltiples 
+	elementos del dominio (en otras palabras, elementos distintos del dominio 
+	son mapeados a elementos distintos del rango). En este caso, B2 viene 
+	mapeado desde A3 y A1, con lo que r1 no es inyectiva.
+
+	(b) r2:
+	¿funcional? sí
+	¿inyectiva? sí
+
+	(c) r3:
+	¿funcional? no, A0 está mapeado a dos elementos del rango.
+	¿inyectiva? sí, porque no hay un elemento del rango que venga mapeado de dos
+	elementos distintos del dominio.
+	Es el caso de una relación inyectiva no funcional (uno a muchos)
+
+	(d) r4:
+	¿funcional? sí
+	¿inyectiva? no, B1 y B0 vienen mapeados de dos elementos del dominio.
+
+	(e) r5:
+	¿funcional? sí
+	¿inyectiva? sí.
+
+(4)
+	(a) Las relaciones son funcionales.
+	*Aplicar unión*: no se preserva la 
+	propiedad de ser funcionales debido a que la unión no es una operación
+	restrictiva, en el sentido de que elimine tuplas de las relaciones a las que
+	se aplicó la operación. 
+	Como se puede obtener una relación de cualquier tamaño más grande, no está
+	garantizado que se preserve.
+	Por ejemplo, si A = {(A0, A1)} y B = {(A0, A2)} entonces 
+	A + B = {(A0, A1), (A0, A2)} que ya no es una relación funcional.
+	
+	*Aplicar intersección*: se preserva
+	porque la operación es restrictiva, brinda resultados que son más chicos 
+	que las relaciones operando, pues elimina tuplas. La intersección tiene que
+	ser funcional.
+
+	*Aplicar diferencia*: sucede lo mismo porque la operación es restrictiva.
+
+	(b) Las relaciones son inyectivas.
+	*Aplicar unión*: como agrega tuplas, no se preserva la inyectividad.
+	Por ejemplo, si A = {(A0, A1), (A2, A3)} y B = {(A4, A3)} entonces
+	A + B = {(A0, A1), (A2, A3), (A4, A3)} que ya no es una relación inyectiva
+	porque A3 viene mapeado de dos elementos distintos del dominio.
+
+	*Aplicar intersección*: como elimina tuplas, se preserva la inyectividad.
+	Una relación resultado de una intersección no tendría por qué dejar de ser
+	inyectiva pues no se le agregan tuplas que afecten esa propiedad.
+
+	*Aplicar diferencia*: sucede lo mismo.
+
+	(c) Las relaciones son funcionales e inyectivas.
+	*Aplicar unión*: sucede lo mismo que en los otros casos,
+
+	*Aplicar intersección y diferencia*: sucede lo mismo.
