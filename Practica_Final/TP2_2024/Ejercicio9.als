@@ -83,6 +83,40 @@ fact "si una persona es hija de otra, no puede mantener otro tipo de relación" 
 		)
 }
 
+fact "si una persona es hermana de otra, no puede mantener otro tipo de relación" {
+	all p1, p2: Person |
+		(p1 in p2.siblings) implies (
+			p1 !in p2.children and
+			p1 !in p2.spouse and
+			p2 !in p1.children and
+			p2 !in p1.spouse
+		)
+}
+
+fact "si una persona es esposa de otra, no puede mantener otro tipo de relación" {
+	all p1, p2: Person |
+		(p1 in p2.spouse) implies (
+			p1 !in p2.siblings and
+			p1 !in p2.children and
+			p2 !in p1.siblings and
+			p2 !in p1.children
+		)
+}
+
+fact "una persona no puede tener de hijos a los hijos de sus ancestros" {
+	// tomo la relación inversa de children = ~children (padres)
+	// tomo la clausura transitiva de esta relación = ^(~children) (ancestros)
+	// para toda persona p, los hijos de p no pueden ser también hijos de algún
+	// ancestro de p
+	all p: Person | no (p.children & (p.(^(~children))).children)
+}
+
+
+fact "las personas que comparten padres son hermanos entre sí" {
+	all disj p1, p2: Person | 
+		(some p3: Person | p1+p2 in p3.children) implies (p1->p2 + p2->p1 in siblings)
+}
+
 ------------------ (b) ------------------
 
 // determina si p3 es el hijo de p1 y p2 (p1 y p2 son los padres de p3)
@@ -137,3 +171,38 @@ pred esMadre[p1, p2: Person] {
 	p1 in Woman and
 	p2 in p1.children
 }
+
+
+------------------ (d) ------------------
+
+// No se verifica. La relacion siblings no es simétrica y por lo tanto
+// no se respeta la relación de hermanos entre las personas.
+check siblingsSimetrica {
+	all p: siblings | ~p in siblings
+} for 8
+
+fact "una persona hermano de otra significa que la otra es hermano de ésa" {
+	all disj p1, p2: Person | (p1 in p2.siblings) implies (p2 in p1.siblings)
+}
+
+------------------ (e) ------------------
+
+// No encuentra instancias por la restricción definida más arriba en el modelo.
+run personaHermanaDeSiMisma {
+	some p: Person | p in p.siblings
+} for 9
+
+------------------ (f) ------------------
+
+pred parientesDeSangre[p1, p2: Person] {
+	// tomo la relación ^children (descendientes)
+	(
+		(p1->p2) in ^children or // p2 es descendiente de p1
+		(p2->p1) in ^children or
+		(some p: Person | (p->p1) + (p->p2) in ^children) // ancestro común
+	)
+}
+
+run parientesDeSangreCasoExito {
+	some disj p1, p2: Person | parientesDeSangre[p1, p2]
+} for 7
