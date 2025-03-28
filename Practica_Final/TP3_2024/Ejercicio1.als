@@ -35,11 +35,11 @@ fact "no hay dos personas con el mismo dni" {
 }
 
 fact "no hay dos personas con la misma matrícula" {
+//	no disj p1, p2: Persona | p1.matricula = p2.matricula
 -- qué pasaría si p1 y p2 no tienen matrícula? este fact no se 
 -- satisfacería y por lo tanto el modelo no permitiría que existan
 -- personas sin matrícula. La solución es asegurarse que tienen
 -- matrícula, y de tenerla, que no sean la misma
-//	no disj p1, p2: Persona | p1.matricula = p2.matricula
 	all disj p1, p2: Persona | 
 		(some p1.matricula and some p2.matricula) implies
 			p1.matricula != p2.matricula
@@ -198,3 +198,138 @@ check agregarMiembroSiempreContador {
 
 
 
+---------------------- (c) ----------------------
+
+
+
+pred agregarMiembroCorregido[c1, c2: Provincial, p: Contador] {
+	-- *Precondiciones*
+	-- El colegio es provincial y de contadores.
+	(c1+c2 in Provincial) and
+	(p in Contador) and
+	-- La persona no está entre los miembros del colegio.
+	(p not in c1.miembros) and
+	-- La persona está en el consejo de un colegio nacional de contadores.
+	(some c: Nacional | p in c.(titulares+suplentes) and c.id != c1.id) and
+	-- *Postcondiciones*
+	-- La persona se agrega al conjunto de miembros.
+	(c2.miembros = c1.miembros + p) and
+	-- *Condiciones de marco*
+	-- El consejo directivo sigue siendo el mismo.
+--	(c2.(titulares+suplentes) = c1.(titulares+suplentes)) and -- esto no
+	-- sirve porque sólo chequeamos que su unión sea la misma, mas no los
+	-- conjuntos (o relaciones) individuales, que pueden diferir (mientras
+	-- la unión dé igual, no pasa nada).
+	(c2.titulares = c1.titulares) and
+	(c2.suplentes = c1.suplentes) and
+	-- El ID sigue siendo el mismo.
+	(c2.id = c1.id)
+}
+
+-- Siempre que se agrega un miembro al colegio, éste es Contador.
+check agregarMiembroCorregidoSiempreContador {
+	all c1, c2: Colegio, p: Persona | 
+		agregarMiembroCorregido[c1, c2, p] implies (p in Contador)
+} for 10
+
+run agregarMiembroCorregidoCasoExito1 {
+	some c1, c2: Colegio, p: Persona | agregarMiembroCorregido[c1, c2, p]	
+}
+
+-- Siempre que se agregue un miembro, aumentará el número de miembros 
+-- en el colegio.
+check agregarMiembroCorregidoAumentaNumeroMiembros {
+	all c1, c2: Colegio, p: Persona |
+		(#(c1.miembros) = 1 and agregarMiembroCorregido[c1, c2, p]) 
+			implies 
+				(#(c2.miembros) = 2)
+} for 10
+
+
+-- No existen colegios nacionales a los que pudiera pertenecer p.
+run agregarMiembroCorregidoCasoNoExito1 {
+	some c1, c2: Colegio, p: Persona | 
+		no Nacional and
+		agregarMiembroCorregido[c1, c2, p]
+} for 9
+
+
+-- Sólo hay una persona. No encuentra instancias debido a que si sólo
+-- hay una persona, como todo colegio debe tener al menos un miembro (y
+-- al menos un titular), entonces "c1" debería no tener miembros para
+-- que c2 tenga al que se quiere agregar, pero esto es incorrecto.
+run agregarMiembroCorregidoCasoNoExito2 {
+	some c1, c2: Colegio, p: Persona |
+		#Persona = 1 and
+		agregarMiembroCorregido[c1, c2, p]
+} for 10
+
+-- Hay miembros del colegio que son Abogados. Como la profesión de los miembros
+-- del colegio determina la categoría del mismo, es imposible agregar un
+-- Contador a un colegio de Abogados. Por ende, no hay instancias.
+run agregarMiembroCorregidoCasoNoExito3 {
+	some c1, c2: Colegio, p: Persona |
+		some (c1.miembros & Abogado) and
+		agregarMiembroCorregido[c1, c2, p]
+} for 10
+
+
+---------------------- (d) ----------------------
+
+-- Función que permite obtener el conjunto de abogados o farmaceuticos que
+-- son consejeros titulares del consejo directivo de al menos un colegio,
+-- y son consejeros suplentes de a lo sumo un colegio.
+fun AbogadosOFarmaceuticosConsejeros: set Persona {
+
+	{p: Abogado+Farmaceutico | 
+		(some c1: Colegio | p in c1.titulares) and
+		(lone c2: Colegio | p in c2.suplentes)
+	}
+
+
+	-- ¿si se buscara que sean titulares de un colegio, y suplentes de a lo
+	-- sumo OTRO colegio, entonces se haría así? No, porque esto tiene el problema
+	-- de que si el "lone" decide ser cero, entonces automaticamente es válida la
+	-- condición que se busca cumplir para p, entonces p no sería titular o 
+	-- suplente de algún colegio y calificaría para pertenecer al conjunto igual.
+/*
+	{p: Abogado+Farmaceutico |
+		(some c1: Colegio | 
+			lone c2: Colegio | 
+				c1 != c2 and
+				p in c1.titulares and
+				p in c2.suplentes
+		)
+	}
+*/
+}
+
+run AbogadosOFarmaceuticosConsejerosCasoExito1 {
+	some AbogadosOFarmaceuticosConsejeros
+} for 6
+
+-- Hay abogados o farmaceuticos que son suplentes de algún colegio (max 1)
+run AbogadosOFarmaceuticosConsejerosCasoExito2 {
+	some AbogadosOFarmaceuticosConsejeros and 
+	some c: Colegio | some AbogadosOFarmaceuticosConsejeros & c.suplentes
+} for 6
+
+run AbogadosOFarmaceuticosConsejerosCasoExito2 {
+	some AbogadosOFarmaceuticosConsejeros and 
+	some c: Colegio | #(AbogadosOFarmaceuticosConsejeros & c.titulares) > 1
+} for 6
+
+
+-- Se busca una instancia que respete que:
+-- 			- haya átomos en el conjunto,
+-- 			- haya algún colegio donde esos abogados o farmaceuticos son
+-- 			miembros, pero no pertenecen al consejo directivo,
+-- 			- no haya colegios donde esos bogas y fmcs sean parte del CD.
+run AbogadosOFarmaceuticosConsejerosCasoNoExito1 {
+	some AbogadosOFarmaceuticosConsejeros and 
+	(some c: Colegio | 
+		some AbogadosOFarmaceuticosConsejeros & c.miembros and
+		no AbogadosOFarmaceuticosConsejeros & c.(titulares+suplentes)
+	) and
+	no c2: Colegio | some AbogadosOFarmaceuticosConsejeros & c2.(titulares+suplentes)
+} for 17
