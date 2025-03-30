@@ -321,15 +321,68 @@ run AbogadosOFarmaceuticosConsejerosCasoExito2 {
 
 
 -- Se busca una instancia que respete que:
--- 			- haya átomos en el conjunto,
--- 			- haya algún colegio donde esos abogados o farmaceuticos son
--- 			miembros, pero no pertenecen al consejo directivo,
--- 			- no haya colegios donde esos bogas y fmcs sean parte del CD.
+-- 		- haya átomos en el conjunto,
+-- 		- haya algún colegio donde esos abogados o farmaceuticos son
+-- 		miembros, pero no pertenecen al consejo directivo,
+-- 		- no haya colegios donde esos bogas y fmcs sean parte del CD.
 run AbogadosOFarmaceuticosConsejerosCasoNoExito1 {
 	some AbogadosOFarmaceuticosConsejeros and 
 	(some c: Colegio | 
 		some AbogadosOFarmaceuticosConsejeros & c.miembros and
 		no AbogadosOFarmaceuticosConsejeros & c.(titulares+suplentes)
 	) and
-	no c2: Colegio | some AbogadosOFarmaceuticosConsejeros & c2.(titulares+suplentes)
+	no c2: Colegio | 
+		some AbogadosOFarmaceuticosConsejeros & c2.(titulares+suplentes)
 } for 17
+
+
+---------------------- (e) ----------------------
+
+
+-- Realiza el traspaso de un consejero suplente del consejo directivo
+-- de un colegio a su conjunto de consejeros titulares.
+pred suplenteATitular[c1, c2: Colegio, p: Persona] {
+	-- *Precondiciones*
+	-- La persona está como consejero suplente del colegio.
+	(p in c1.suplentes) and
+	-- La persona no debe formar parte del CD de un colegio con 
+	-- distinto identificador que el colegio para el cual se está
+	-- realizando el traspaso.
+	(no c3: Colegio | c3.id != c1.id and p in c3.(titulares+suplentes)) and
+	-- *Postcondiciones*
+	-- La persona está como consejero titular del colegio.
+	(c2.titulares = c1.titulares + p) and
+	-- La persona deja de estar como suplente del colegio.
+	(c2.suplentes = c1.suplentes - p) and
+	-- El colegio debe contar con al menos un consejero suplente.
+	(some c2.suplentes) and
+	-- *Condiciones de marco*
+	-- Los miembros del colegio siguen siendo los mismos.
+	(c2.miembros = c1.miembros) and
+	-- El ID del colegio también.
+	(c2.id = c1.id) and
+	-- El tipo de colegio también.
+	(c1+c2 in Nacional or c1+c2 in Provincial)
+}
+
+run suplenteATitular
+
+
+// El colegio está lleno de titulares, así que no podría agregarse uno.
+run suplenteATitularCasoNoExito1 {
+	some c1, c2: Colegio, p: Persona | 
+		c1 in Nacional and
+		#(c1.titulares) = 4 and
+		suplenteATitular[c1, c2, p]
+} for 6
+
+// El colegio tiene un solo suplente, con lo cual se quedaría sin 
+// suplentes tras el traspaso.
+run suplenteATitularCasoNoExito2 {
+	some c1, c2: Colegio, p: Persona | 
+		#(c1.suplentes) = 2 and
+		suplenteATitular[c1, c2, p]
+} for 16
+
+
+
